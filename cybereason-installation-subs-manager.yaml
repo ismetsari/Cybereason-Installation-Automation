@@ -10,13 +10,13 @@
 
     - name: Register to subscription manager if not already registered (Red Hat Enterprise Linux 8)
       shell: |
-        subscription-manager register --org="TT_Mobil" --activationkey="TEST_Redhat_8"
+        <Your_Red_Hat_8.x_Subscription_Manager_Activation-Key_Comes_Here>
         subscription-manager release --set=8.6
       when: ansible_distribution_major_version == '8'
       ignore_errors: true
 
     - name: Register to subscription manager if not already registered (Red Hat Enterprise Linux 7)
-      shell: subscription-manager register --org="TT_Mobil" --activationkey="TEST_Redhat_7"
+      shell: <Your_Red_Hat_7.x_Subscription_Manager_Activation-Key_Comes_Here>
       when: ansible_distribution_major_version == '7'
       ignore_errors: true
 
@@ -32,13 +32,13 @@
         
     - name: Copying rpm file to the destination node
       copy:
-        src: /ansible/automation/repository/rpms/cybereason.rpm
+        src: <path-of-your-shell-script-comes-here>
         dest: /tmp/agents
 
     - name: Installation
       shell : |
         cd /tmp/agents
-        rpm -i cybereason.rpm
+        <Install rpm package e.g -> rpm -i cybereasn.rpm>
       register: cybereason_installation_status
 
     - name: Installation details
@@ -47,11 +47,11 @@
 
     - name: Registering Service Status
       shell: systemctl status cybereason-sensor.service
-      register: trend_micro_service_status
+      register: cybereason_service_status
 
     - name: Cybereason Service Status
       debug: 
-        var: trend_micro_service_status.stdout_lines
+        var: cybereason_service_status.stdout_lines
 
     - name: Deleting temporary directory
       file:
