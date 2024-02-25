@@ -1,0 +1,65 @@
+---
+- name: Installing Trend Micro and its dependencies
+  hosts: all
+  gather_facts: yes
+
+  tasks:
+    - name: Gather the rpm package facts
+      package_facts:
+        manager: auto
+
+    - name: Register to subscription manager if not already registered (Red Hat Enterprise Linux 8)
+      shell: |
+        subscription-manager register --org="TT_Mobil" --activationkey="TEST_Redhat_8"
+        subscription-manager release --set=8.6
+      when: ansible_distribution_major_version == '8'
+      ignore_errors: true
+
+    - name: Register to subscription manager if not already registered (Red Hat Enterprise Linux 7)
+      shell: subscription-manager register --org="TT_Mobil" --activationkey="TEST_Redhat_7"
+      when: ansible_distribution_major_version == '7'
+      ignore_errors: true
+
+    - name: Installing dependencies
+      shell: |
+        yum install -y python3
+        yum install -y gdb
+
+    - name: Creating directory
+      file:
+        path: /tmp/agents
+        state: directory
+        
+    - name: Copying rpm file to the destination node
+      copy:
+        src: /ansible/automation/repository/rpms/cybereason.rpm
+        dest: /tmp/agents
+
+    - name: Installation
+      shell : |
+        cd /tmp/agents
+        rpm -i cybereason.rpm
+      register: cybereason_installation_status
+
+    - name: Installation details
+      debug:
+        var: cybereason_installation_status.stdout_lines
+
+    - name: Registering Service Status
+      shell: systemctl status cybereason-sensor.service
+      register: trend_micro_service_status
+
+    - name: Cybereason Service Status
+      debug: 
+        var: trend_micro_service_status.stdout_lines
+
+    - name: Deleting temporary directory
+      file:
+        path: /tmp/agents
+        state: absent
+
+    - name: Unregistering from subscription-manager
+      shell: |
+        subscription-manager unregister
+        subscription-manager clean
+        subscription-manager remove --all
